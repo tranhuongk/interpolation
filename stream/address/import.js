@@ -33,7 +33,7 @@ function streamFactory(db, done){
     stats.inc( batch.length );
 
     // wait for transaction to complete before continuing
-    next();
+    setImmediate(next);
 
   }, function( next ){
 
