@@ -65,7 +65,7 @@ app.get('/search/geojson', function (req, res) {
   var street = req.query.street
 
 
-  conn.search.query(point, number, street, "R", function (err, points) {
+  conn.search.query(point, number, street, function (err, points) {
     if (err) { return res.status(400).json(err); }
     if (!point) { return res.status(200).json({}); }
 
@@ -88,7 +88,7 @@ app.get('/search/table', function (req, res) {
   var number = req.query.number;
   var street = req.query.street;
 
-  conn.search.query(point, number, street, "R", function (err, points) {
+  conn.search.query(point, number, street, function (err, points) {
     if (err) { return res.status(400).json(err); }
     if (!point) { return res.status(200).send(''); }
 
