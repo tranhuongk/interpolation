@@ -21,7 +21,7 @@ function setup(addressDbPath, streetDbPath) {
   db.run('PRAGMA street.mmap_size=268435456;');
 
   // query method
-  var q = function (coord, number, street, parity, cb) {
+  var q = function (coord, number, street, cb) {
 
     var point = {
       lat: parseFloat(coord.lat),
@@ -59,16 +59,16 @@ function setup(addressDbPath, streetDbPath) {
 
       // return exact match
       if (match) {
-        return cb(null, {
+        return cb(null, [{
           type: 'exact',
           source: match.source,
           source_id: match.source_id,
           number: number,
-          parity: parity,
+          parity: match.parity,
           // number: analyze.housenumberFloatToString( match.housenumber ),
           lat: parseFloat(match.lat.toFixed(7)),
           lon: parseFloat(match.lon.toFixed(7))
-        });
+        }]);
       }
 
       // try to find a close match with the same number (possibly an apartment)
@@ -79,16 +79,16 @@ function setup(addressDbPath, streetDbPath) {
 
       // return close match
       if (match) {
-        return cb(null, {
+        return cb(null, [{
           type: 'close',
           source: match.source,
           source_id: match.source_id,
           number: number,
-          parity: parity,
+          parity: match.parity,
           // number: analyze.housenumberFloatToString( match.housenumber ),
           lat: parseFloat(match.lat.toFixed(7)),
           lon: parseFloat(match.lon.toFixed(7))
-        });
+        }]);
       }
 
       // attempt to interpolate the position
@@ -143,15 +143,15 @@ function setup(addressDbPath, streetDbPath) {
       }
 
       // return interpolated address
-      return cb(null, {
+      return cb(null, [{
         type: 'interpolated',
         source: 'mixed',
         number: number,
-        parity: parity,
+        parity: "R+L",
         // number: '' + Math.floor( normalized.number ),
         lat: parseFloat(project.toDeg(point.lat).toFixed(7)),
         lon: parseFloat(project.toDeg(point.lon).toFixed(7))
-      });
+      }]);
     });
   };
 
