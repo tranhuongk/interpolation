@@ -100,12 +100,23 @@ function setup(addressDbPath, streetDbPath) {
       var map_l = {};
       res.forEach(function (row) {
         if (!map_r.hasOwnProperty(row.id)) { map_r[row.id] = {}; }
-        if (row.housenumber < normalized.number) { map_r[row.id].before = row; }
-        if (row.housenumber > normalized.number) { map_r[row.id].after = row; }
+        if (row.housenumber < normalized.number && row.parity == "R") { map_r[row.id].before = row; }
+        if (row.housenumber > normalized.number && row.parity == "R") { map_r[row.id].after = row; }
         if (map_r[row.id].before && map_r[row.id].after) {
           map_r[row.id].diff = {
             before: map_r[row.id].before.housenumber - normalized.number,
             after: map_r[row.id].after.housenumber - normalized.number
+          };
+        }
+      });
+      res.forEach(function (row) {
+        if (!map_l.hasOwnProperty(row.id)) { map_l[row.id] = {}; }
+        if (row.housenumber < normalized.number && row.parity == "L") { map_l[row.id].before = row; }
+        if (row.housenumber > normalized.number && row.parity == "L") { map_l[row.id].after = row; }
+        if (map_l[row.id].before && map_l[row.id].after) {
+          map_l[row.id].diff = {
+            before: map_l[row.id].before.housenumber - normalized.number,
+            after: map_l[row.id].after.housenumber - normalized.number
           };
         }
       });
@@ -117,9 +128,15 @@ function setup(addressDbPath, streetDbPath) {
           segments_r.push(map_r[id]);
         }
       }
+      var segments_l = [];
+      for (var id in map_l) {
+        if (map_l[id].before && map_l[id].after) {
+          segments_l.push(map_l[id]);
+        }
+      }
 
       // could not find two rows to use for interpolation
-      if (!segments_r.length) {
+      if (!segments_r.length && !segments_l.length) {
         return cb(null, null);
       }
 
@@ -127,15 +144,23 @@ function setup(addressDbPath, streetDbPath) {
       segments_r.sort(function (a, b) {
         return Math.abs(a.diff.before + a.diff.after) - Math.abs(b.diff.before + b.diff.after);
       });
+      segments_l.sort(function (a, b) {
+        return Math.abs(a.diff.before + a.diff.after) - Math.abs(b.diff.before + b.diff.after);
+      });
 
       // select before/after values to use for the interpolation
       var before_r = segments_r[0].before;
       var after_r = segments_r[0].after;
+      var before_l = segments_l[0].before;
+      var after_l = segments_l[0].after;
 
       // compute interpolated address
       var A = { lat: project.toRad(before_r.proj_lat), lon: project.toRad(before_r.proj_lon) };
       var B = { lat: project.toRad(after_r.proj_lat), lon: project.toRad(after_r.proj_lon) };
       var distance = geodesic.distance(A, B);
+      var A_L = { lat: project.toRad(before_l.proj_lat), lon: project.toRad(before_l.proj_lon) };
+      var B_L = { lat: project.toRad(after_l.proj_lat), lon: project.toRad(after_l.proj_lon) };
+      var distance_l = geodesic.distance(A_L, B_L);
 
       // if distance = 0 then we can simply use either A or B (they are the same lat/lon)
       // else we interpolate between the two positions
@@ -143,6 +168,11 @@ function setup(addressDbPath, streetDbPath) {
       if (distance > 0) {
         var ratio = ((normalized.number - before_r.housenumber) / (after_r.housenumber - before_r.housenumber));
         point_r = geodesic.interpolate(distance, ratio, A, B);
+      }
+      var point_l = A_L;
+      if (distance_l > 0) {
+        var ratio = ((normalized.number - before_l.housenumber) / (after_l.housenumber - before_l.housenumber));
+        point_l = geodesic.interpolate(distance, ratio, A, B);
       }
 
       // return interpolated address
@@ -159,11 +189,11 @@ function setup(addressDbPath, streetDbPath) {
         type: 'interpolated',
         source: 'mixed',
         number: number,
-        parity: "R+L",
+        parity: "L",
         accuracy: 90,
         // number: '' + Math.floor( normalized.number ),
-        lat: parseFloat(project.toDeg(point_r.lat).toFixed(7)),
-        lon: parseFloat(project.toDeg(point_r.lon).toFixed(7))
+        lat: parseFloat(project.toDeg(point_l.lat).toFixed(7)),
+        lon: parseFloat(project.toDeg(point_l.lon).toFixed(7))
       }]);
     });
   };
