@@ -21,7 +21,7 @@ function setup(addressDbPath, streetDbPath) {
   db.run('PRAGMA street.mmap_size=268435456;');
 
   // query method
-  var q = function (coord, number, street, cb) {
+  var q = function (coord, number, street, parity, cb) {
 
     var point = {
       lat: parseFloat(coord.lat),
@@ -64,6 +64,7 @@ function setup(addressDbPath, streetDbPath) {
           source: match.source,
           source_id: match.source_id,
           number: number,
+          parity: parity,
           // number: analyze.housenumberFloatToString( match.housenumber ),
           lat: parseFloat(match.lat.toFixed(7)),
           lon: parseFloat(match.lon.toFixed(7))
@@ -83,6 +84,7 @@ function setup(addressDbPath, streetDbPath) {
           source: match.source,
           source_id: match.source_id,
           number: number,
+          parity: parity,
           // number: analyze.housenumberFloatToString( match.housenumber ),
           lat: parseFloat(match.lat.toFixed(7)),
           lon: parseFloat(match.lon.toFixed(7))
@@ -141,26 +143,15 @@ function setup(addressDbPath, streetDbPath) {
       }
 
       // return interpolated address
-      return cb(null, [
-        {
-          type: 'interpolated',
-          source: 'mixed',
-          number: number,
-          parity: "R",
-          // number: '' + Math.floor( normalized.number ),
-          lat: parseFloat(project.toDeg(point.lat).toFixed(7)),
-          lon: parseFloat(project.toDeg(point.lon).toFixed(7))
-        },
-        {
-          type: 'interpolated',
-          source: 'mixed',
-          number: number,
-          parity: "L",
-          // number: '' + Math.floor( normalized.number ),
-          lat: parseFloat(project.toDeg(point.lat).toFixed(7)),
-          lon: parseFloat(project.toDeg(point.lon).toFixed(7))
-        }
-      ]);
+      return cb(null, {
+        type: 'interpolated',
+        source: 'mixed',
+        number: number,
+        parity: parity,
+        // number: '' + Math.floor( normalized.number ),
+        lat: parseFloat(project.toDeg(point.lat).toFixed(7)),
+        lon: parseFloat(project.toDeg(point.lon).toFixed(7))
+      });
     });
   };
 

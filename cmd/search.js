@@ -18,7 +18,7 @@ var point = {
   lon: parseFloat(process.argv[5])
 };
 
-conn.query(point, number, street, function (err, res) {
+conn.query(point, number, street, "R", function (err, res) {
 
   if (err) {
     return console.error(err);
