@@ -65,6 +65,7 @@ function setup(addressDbPath, streetDbPath) {
           source_id: match.source_id,
           number: number,
           parity: match.parity,
+          accuracy: 100,
           // number: analyze.housenumberFloatToString( match.housenumber ),
           lat: parseFloat(match.lat.toFixed(7)),
           lon: parseFloat(match.lon.toFixed(7))
@@ -85,6 +86,7 @@ function setup(addressDbPath, streetDbPath) {
           source_id: match.source_id,
           number: number,
           parity: match.parity,
+          accuracy: 90,
           // number: analyze.housenumberFloatToString( match.housenumber ),
           lat: parseFloat(match.lat.toFixed(7)),
           lon: parseFloat(match.lon.toFixed(7))
@@ -94,52 +96,53 @@ function setup(addressDbPath, streetDbPath) {
       // attempt to interpolate the position
 
       // find the records before and after the desired number (group by street segment)
-      var map = {};
+      var map_r = {};
+      var map_l = {};
       res.forEach(function (row) {
-        if (!map.hasOwnProperty(row.id)) { map[row.id] = {}; }
-        if (row.housenumber < normalized.number) { map[row.id].before = row; }
-        if (row.housenumber > normalized.number) { map[row.id].after = row; }
-        if (map[row.id].before && map[row.id].after) {
-          map[row.id].diff = {
-            before: map[row.id].before.housenumber - normalized.number,
-            after: map[row.id].after.housenumber - normalized.number
+        if (!map_r.hasOwnProperty(row.id)) { map_r[row.id] = {}; }
+        if (row.housenumber < normalized.number) { map_r[row.id].before = row; }
+        if (row.housenumber > normalized.number) { map_r[row.id].after = row; }
+        if (map_r[row.id].before && map_r[row.id].after) {
+          map_r[row.id].diff = {
+            before: map_r[row.id].before.housenumber - normalized.number,
+            after: map_r[row.id].after.housenumber - normalized.number
           };
         }
       });
 
       // remove segments with less than 2 points; convert map to array
-      var segments = [];
-      for (var id in map) {
-        if (map[id].before && map[id].after) {
-          segments.push(map[id]);
+      var segments_r = [];
+      for (var id in map_r) {
+        if (map_r[id].before && map_r[id].after) {
+          segments_r.push(map_r[id]);
         }
       }
 
       // could not find two rows to use for interpolation
-      if (!segments.length) {
+      if (!segments_r.length) {
         return cb(null, null);
       }
 
       // sort by miniumum housenumber difference from target housenumber ASC
-      segments.sort(function (a, b) {
+      segments_r.sort(function (a, b) {
         return Math.abs(a.diff.before + a.diff.after) - Math.abs(b.diff.before + b.diff.after);
       });
 
       // select before/after values to use for the interpolation
-      var before = segments[0].before;
-      var after = segments[0].after;
+      var before_r = segments_r[0].before;
+      var after_r = segments_r[0].after;
 
       // compute interpolated address
-      var A = { lat: project.toRad(before.proj_lat), lon: project.toRad(before.proj_lon) };
-      var B = { lat: project.toRad(after.proj_lat), lon: project.toRad(after.proj_lon) };
+      var A = { lat: project.toRad(before_r.proj_lat), lon: project.toRad(before_r.proj_lon) };
+      var B = { lat: project.toRad(after_r.proj_lat), lon: project.toRad(after_r.proj_lon) };
       var distance = geodesic.distance(A, B);
 
       // if distance = 0 then we can simply use either A or B (they are the same lat/lon)
       // else we interpolate between the two positions
-      var point = A;
+      var point_r = A;
       if (distance > 0) {
-        var ratio = ((normalized.number - before.housenumber) / (after.housenumber - before.housenumber));
-        point = geodesic.interpolate(distance, ratio, A, B);
+        var ratio = ((normalized.number - before_r.housenumber) / (after_r.housenumber - before_r.housenumber));
+        point_r = geodesic.interpolate(distance, ratio, A, B);
       }
 
       // return interpolated address
@@ -147,10 +150,20 @@ function setup(addressDbPath, streetDbPath) {
         type: 'interpolated',
         source: 'mixed',
         number: number,
-        parity: "R+L",
+        parity: "R",
+        accuracy: 90,
         // number: '' + Math.floor( normalized.number ),
-        lat: parseFloat(project.toDeg(point.lat).toFixed(7)),
-        lon: parseFloat(project.toDeg(point.lon).toFixed(7))
+        lat: parseFloat(project.toDeg(point_r.lat).toFixed(7)),
+        lon: parseFloat(project.toDeg(point_r.lon).toFixed(7))
+      }, {
+        type: 'interpolated',
+        source: 'mixed',
+        number: number,
+        parity: "R+L",
+        accuracy: 90,
+        // number: '' + Math.floor( normalized.number ),
+        lat: parseFloat(project.toDeg(point_r.lat).toFixed(7)),
+        lon: parseFloat(project.toDeg(point_r.lon).toFixed(7))
       }]);
     });
   };
