@@ -29,7 +29,7 @@ conn.query(point, number, street, function (err, res) {
   }
 
   for (var attr in res) {
-    console.log(attr + '\t' + res[attr] + "hello");
+    console.log(attr + '\t' + res[attr]);
   }
 
 });

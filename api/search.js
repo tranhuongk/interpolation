@@ -142,7 +142,7 @@ function setup( addressDbPath, streetDbPath ){
       return cb( null, {
         type: 'interpolated',
         source: 'mixed',
-        number: '' + Math.floor( normalized.number ),
+        number: number,
         lat: parseFloat( project.toDeg( point.lat ).toFixed(7) ),
         lon: parseFloat( project.toDeg( point.lon ).toFixed(7) )
       });
