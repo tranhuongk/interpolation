@@ -90,7 +90,8 @@ app.get('/search/table', function (req, res) {
 
   conn.search.query(point, number, street, function (err, points) {
     if (err) { return res.status(400).json(err); }
-    if (!point) { return res.status(200).send(''); }
+    if (!points) { return res.status(200).send(''); }
+    if (!points.length) { return res.status(200).send(''); }
 
     res.setHeader('Content-Type', 'text/html');
     res.send(pretty.htmltable(points));

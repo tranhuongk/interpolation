@@ -110,9 +110,7 @@ function setup(addressDbPath, streetDbPath) {
             };
           }
         }
-      });
-      res.forEach(function (row) {
-        if (row.parity === "L") {
+        else {
           if (!map_l.hasOwnProperty(row.id)) { map_l[row.id] = {}; }
           if (row.housenumber < normalized.number) { map_l[row.id].before = row; }
           if (row.housenumber > normalized.number) { map_l[row.id].after = row; }
