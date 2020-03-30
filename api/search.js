@@ -139,66 +139,80 @@ function setup(addressDbPath, streetDbPath) {
         }
       }
 
+      var results = []
       // could not find two rows to use for interpolation
-      if (!segments_r.length && !segments_l.length) {
-        return cb(null, []);
+      if (segments_r.length) {
+        segments_r.sort(function (a, b) {
+          return Math.abs(a.diff.before + a.diff.after) - Math.abs(b.diff.before + b.diff.after);
+        });
+
+        // select before/after values to use for the interpolation
+        var before = segments_r[0].before;
+        var after = segments_r[0].after;
+
+        // compute interpolated address
+        var A = { lat: project.toRad(before.proj_lat), lon: project.toRad(before.proj_lon) };
+        var B = { lat: project.toRad(after.proj_lat), lon: project.toRad(after.proj_lon) };
+        var distance = geodesic.distance(A, B);
+
+        // if distance = 0 then we can simply use either A or B (they are the same lat/lon)
+        // else we interpolate between the two positions
+        var point = A;
+        if (distance > 0) {
+          var ratio = ((normalized.number - before.housenumber) / (after.housenumber - before.housenumber));
+          point = geodesic.interpolate(distance, ratio, A, B);
+        }
+
+        results.push({
+          type: 'interpolated',
+          source: 'mixed',
+          number: number,
+          parity: "R",
+          accuracy: 90,
+          // number: '' + Math.floor( normalized.number ),
+          lat: parseFloat(project.toDeg(point.lat).toFixed(7)),
+          lon: parseFloat(project.toDeg(point.lon).toFixed(7))
+        })
       }
 
-      // sort by miniumum housenumber difference from target housenumber ASC
-      segments_r.sort(function (a, b) {
-        return Math.abs(a.diff.before + a.diff.after) - Math.abs(b.diff.before + b.diff.after);
-      });
-      segments_l.sort(function (a, b) {
-        return Math.abs(a.diff.before + a.diff.after) - Math.abs(b.diff.before + b.diff.after);
-      });
+      if (segments_l.length) {
+        segments_l.sort(function (a, b) {
+          return Math.abs(a.diff.before + a.diff.after) - Math.abs(b.diff.before + b.diff.after);
+        });
 
-      // select before/after values to use for the interpolation
-      var before_r = segments_r[0].before;
-      var after_r = segments_r[0].after;
-      var before_l = segments_l[0].before;
-      var after_l = segments_l[0].after;
+        // select before/after values to use for the interpolation
+        var before = segments_l[0].before;
+        var after = segments_l[0].after;
 
-      // compute interpolated address
-      var A_R = { lat: project.toRad(before_r.proj_lat), lon: project.toRad(before_r.proj_lon) };
-      var B_R = { lat: project.toRad(after_r.proj_lat), lon: project.toRad(after_r.proj_lon) };
-      var distance_r = geodesic.distance(A_R, B_R);
-      var A_L = { lat: project.toRad(before_l.proj_lat), lon: project.toRad(before_l.proj_lon) };
-      var B_L = { lat: project.toRad(after_l.proj_lat), lon: project.toRad(after_l.proj_lon) };
-      var distance_l = geodesic.distance(A_L, B_L);
+        // compute interpolated address
+        var A = { lat: project.toRad(before.proj_lat), lon: project.toRad(before.proj_lon) };
+        var B = { lat: project.toRad(after.proj_lat), lon: project.toRad(after.proj_lon) };
+        var distance = geodesic.distance(A, B);
 
-      // if distance = 0 then we can simply use either A or B (they are the same lat/lon)
-      // else we interpolate between the two positions
-      var point_r = A_R;
-      if (distance_r > 0) {
-        var ratio = ((normalized.number - before_r.housenumber) / (after_r.housenumber - before_r.housenumber));
-        point_r = geodesic.interpolate(distance_r, ratio, A_R, B_R);
+        // if distance = 0 then we can simply use either A or B (they are the same lat/lon)
+        // else we interpolate between the two positions
+        var point = A;
+        if (distance > 0) {
+          var ratio = ((normalized.number - before.housenumber) / (after.housenumber - before.housenumber));
+          point = geodesic.interpolate(distance, ratio, A, B);
+        }
+
+        results.push({
+          type: 'interpolated',
+          source: 'mixed',
+          number: number,
+          parity: "L",
+          accuracy: 90,
+          // number: '' + Math.floor( normalized.number ),
+          lat: parseFloat(project.toDeg(point.lat).toFixed(7)),
+          lon: parseFloat(project.toDeg(point.lon).toFixed(7))
+        })
       }
-      var point_l = A_L;
-      if (distance_l > 0) {
-        var ratio = ((normalized.number - before_l.housenumber) / (after_l.housenumber - before_l.housenumber));
-        point_l = geodesic.interpolate(distance_l, ratio, A_L, B_L);
-      }
+
+
 
       // return interpolated address
-      return cb(null, [{
-        type: 'interpolated',
-        source: 'mixed',
-        number: number,
-        parity: "R",
-        accuracy: 90,
-        // number: '' + Math.floor( normalized.number ),
-        lat: parseFloat(project.toDeg(point_r.lat).toFixed(7)),
-        lon: parseFloat(project.toDeg(point_r.lon).toFixed(7))
-      }, {
-        type: 'interpolated',
-        source: 'mixed',
-        number: number,
-        parity: "L",
-        accuracy: 90,
-        // number: '' + Math.floor( normalized.number ),
-        lat: parseFloat(project.toDeg(point_l.lat).toFixed(7)),
-        lon: parseFloat(project.toDeg(point_l.lon).toFixed(7))
-      }]);
+      return cb(null, results);
     });
   };
 
