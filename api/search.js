@@ -65,7 +65,6 @@ function setup(addressDbPath, streetDbPath) {
           source_id: match.source_id,
           number: number,
           parity: match.parity,
-          accuracy: 100,
           // number: analyze.housenumberFloatToString( match.housenumber ),
           lat: parseFloat(match.lat.toFixed(7)),
           lon: parseFloat(match.lon.toFixed(7))
@@ -86,7 +85,6 @@ function setup(addressDbPath, streetDbPath) {
           source_id: match.source_id,
           number: number,
           parity: match.parity,
-          accuracy: 90,
           // number: analyze.housenumberFloatToString( match.housenumber ),
           lat: parseFloat(match.lat.toFixed(7)),
           lon: parseFloat(match.lon.toFixed(7))
@@ -100,74 +98,57 @@ function setup(addressDbPath, streetDbPath) {
       var map_l = {};
       var res_r = []
       var res_l = []
-
-      var before_r
-      var before_l
-      var after_r
-      var after_l
-
+      var isEven = Math.floor(normalized.number) % 2 == 0
+      var rateEven_R = 0
+      var rateEven_L = 0
       res.forEach(function (row) {
-        if (row.parity === "R") {
-
-          if (!before_r) {
-            before_r = row
-          }
-          else if (before_r.housenumber < row.housenumber && row.housenumber < normalized.number) {
-            before_r = row
-          }
-
-          if (!after_r) {
-            after_r = row
-          }
-          else if (after_r.housenumber > row.housenumber && row.housenumber > normalized.number) {
-            after_r = row
-          }
-
-        }
-        else {
-          if (!before_l) {
-            before_l = row
-          }
-          else if (before_l.housenumber < row.housenumber && row.housenumber < normalized.number) {
-            before_l = row
-          }
-
-          if (!after_l) {
-            after_l = row
-          }
-          else if (after_l.housenumber > row.housenumber && row.housenumber > normalized.number) {
-            after_l = row
-          }
-        }
+        if (row.parity === "R")
+          res_r.push(row)
+        else
+          res_l.push(row)
       })
-      res_r.push(before_r)
-      res_r.push(after_r)
-      res_l.push(before_l)
-      res_l.push(after_l)
-      console.log(res)
 
-      res_r.forEach(function (row) {
-        if (!map_r.hasOwnProperty(row.id)) { map_r[row.id] = {}; }
-        if (row.housenumber < normalized.number) { map_r[row.id].before = row; }
-        if (row.housenumber > normalized.number) { map_r[row.id].after = row; }
-        if (map_r[row.id].before && map_r[row.id].after) {
-          map_r[row.id].diff = {
-            before: map_r[row.id].before.housenumber - normalized.number,
-            after: map_r[row.id].after.housenumber - normalized.number
-          };
+      for (let index = 0; index < res_r.length; index++) {
+        const row = res_r[index];
+        if (index < res_r.length - 1) {
+          const row_next = res_r[index + 1];
+          if (row.housenumber < normalized.number && row_next.housenumber > normalized.number) {
+            if (!map_r.hasOwnProperty(row.id)) { map_r[row.id] = {}; }
+            map_r[row.id].before = row;
+            map_r[row.id].after = row_next;
+            if (map_r[row.id].before && map_r[row.id].after) {
+              map_r[row.id].diff = {
+                before: map_r[row.id].before.housenumber - normalized.number,
+                after: map_r[row.id].after.housenumber - normalized.number
+              };
+            }
+          }
         }
-      });
-      res_l.forEach(function (row) {
-        if (!map_l.hasOwnProperty(row.id)) { map_l[row.id] = {}; }
-        if (row.housenumber < normalized.number) { map_l[row.id].before = row; }
-        if (row.housenumber > normalized.number) { map_l[row.id].after = row; }
-        if (map_l[row.id].before && map_l[row.id].after) {
-          map_l[row.id].diff = {
-            before: map_l[row.id].before.housenumber - normalized.number,
-            after: map_l[row.id].after.housenumber - normalized.number
-          };
+        if (Math.floor(row.housenumber) % 2 == 0) {
+          rateEven_R += 1 / res_r.length
         }
-      });
+      }
+
+      for (let index = 0; index < res_l.length; index++) {
+        const row = res_l[index];
+        if (index < res_l.length - 1) {
+          const row_next = res_l[index + 1];
+          if (row.housenumber < normalized.number && row_next.housenumber > normalized.number) {
+            if (!map_l.hasOwnProperty(row.id)) { map_l[row.id] = {}; }
+            map_l[row.id].before = row;
+            map_l[row.id].after = row_next;
+            if (map_l[row.id].before && map_l[row.id].after) {
+              map_l[row.id].diff = {
+                before: map_l[row.id].before.housenumber - normalized.number,
+                after: map_l[row.id].after.housenumber - normalized.number
+              };
+            }
+          }
+        }
+        if (Math.floor(row.housenumber) % 2 == 0) {
+          rateEven_L += 1 / res_l.length
+        }
+      }
 
       // remove segments with less than 2 points; convert map to array
       var segments_r = [];
@@ -207,14 +188,21 @@ function setup(addressDbPath, streetDbPath) {
           point = geodesic.interpolate(distance, ratio, A, B);
         }
 
+        var rate
+        if (isEven) {
+          rate = rateEven_R
+        }
+        else
+          rate = 1 - rateEven_R
+
         results.push({
           type: 'interpolated',
           source: 'mixed',
           number: number,
-          before: before_r.housenumber,
-          after: after_r.housenumber,
           parity: "R",
-          accuracy: 90,
+          accuracy: parseFloat((rate*100).toFixed(2)),
+          before: before.housenumber,
+          after: after.housenumber,
           // number: '' + Math.floor( normalized.number ),
           lat: parseFloat(project.toDeg(point.lat).toFixed(7)),
           lon: parseFloat(project.toDeg(point.lon).toFixed(7))
@@ -243,14 +231,21 @@ function setup(addressDbPath, streetDbPath) {
           point = geodesic.interpolate(distance, ratio, A, B);
         }
 
+        var rate
+        if (isEven) {
+          rate = rateEven_L
+        }
+        else
+          rate = 1 - rateEven_L
+
         results.push({
           type: 'interpolated',
           source: 'mixed',
           number: number,
-          before: before_l.housenumber,
-          after: after_l.housenumber,
           parity: "L",
-          accuracy: 90,
+          accuracy: parseFloat((rate*100).toFixed(2)),
+          before: before.housenumber,
+          after: after.housenumber,
           // number: '' + Math.floor( normalized.number ),
           lat: parseFloat(project.toDeg(point.lat).toFixed(7)),
           lon: parseFloat(project.toDeg(point.lon).toFixed(7))
