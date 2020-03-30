@@ -107,6 +107,8 @@ function setup(addressDbPath, streetDbPath) {
           res_l.push(row)
       })
 
+      console.log(res)
+
       res_r.forEach(function (row) {
         if (!map_r.hasOwnProperty(row.id)) { map_r[row.id] = {}; }
         if (row.housenumber < normalized.number) { map_r[row.id].before = row; }
@@ -129,8 +131,6 @@ function setup(addressDbPath, streetDbPath) {
           };
         }
       });
-
-
 
       // remove segments with less than 2 points; convert map to array
       var segments_r = [];
