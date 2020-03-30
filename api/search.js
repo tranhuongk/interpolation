@@ -98,30 +98,39 @@ function setup(addressDbPath, streetDbPath) {
       // find the records before and after the desired number (group by street segment)
       var map_r = {};
       var map_l = {};
+      var res_r = []
+      var res_l = []
       res.forEach(function (row) {
-        if (row.parity === "R") {
-          if (!map_r.hasOwnProperty(row.id)) { map_r[row.id] = {}; }
-          if (row.housenumber < normalized.number) { map_r[row.id].before = row; }
-          if (row.housenumber > normalized.number) { map_r[row.id].after = row; }
-          if (map_r[row.id].before && map_r[row.id].after) {
-            map_r[row.id].diff = {
-              before: map_r[row.id].before.housenumber - normalized.number,
-              after: map_r[row.id].after.housenumber - normalized.number
-            };
-          }
-        }
-        else {
-          if (!map_l.hasOwnProperty(row.id)) { map_l[row.id] = {}; }
-          if (row.housenumber < normalized.number) { map_l[row.id].before = row; }
-          if (row.housenumber > normalized.number) { map_l[row.id].after = row; }
-          if (map_l[row.id].before && map_l[row.id].after) {
-            map_l[row.id].diff = {
-              before: map_l[row.id].before.housenumber - normalized.number,
-              after: map_l[row.id].after.housenumber - normalized.number
-            };
-          }
+        if (row.parity === "R")
+          res_r.push(row)
+        else
+          res_l.push(row)
+      })
+
+      res_r.forEach(function (row) {
+        if (!map_r.hasOwnProperty(row.id)) { map_r[row.id] = {}; }
+        if (row.housenumber < normalized.number) { map_r[row.id].before = row; }
+        if (row.housenumber > normalized.number) { map_r[row.id].after = row; }
+        if (map_r[row.id].before && map_r[row.id].after) {
+          map_r[row.id].diff = {
+            before: map_r[row.id].before.housenumber - normalized.number,
+            after: map_r[row.id].after.housenumber - normalized.number
+          };
         }
       });
+      res_l.forEach(function (row) {
+        if (!map_l.hasOwnProperty(row.id)) { map_l[row.id] = {}; }
+        if (row.housenumber < normalized.number) { map_l[row.id].before = row; }
+        if (row.housenumber > normalized.number) { map_l[row.id].after = row; }
+        if (map_l[row.id].before && map_l[row.id].after) {
+          map_l[row.id].diff = {
+            before: map_l[row.id].before.housenumber - normalized.number,
+            after: map_l[row.id].after.housenumber - normalized.number
+          };
+        }
+      });
+
+
 
       // remove segments with less than 2 points; convert map to array
       var segments_r = [];
