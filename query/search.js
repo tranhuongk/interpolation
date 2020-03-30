@@ -13,7 +13,7 @@ var MAX_MATCHES = 20;
 
 var SQL = [
   'WITH base AS (',
-    'SELECT id, housenumber, rowid',
+    'SELECT id, housenumber, rowid, parity',
     'FROM address',
     'WHERE id IN (',
       'SELECT id',

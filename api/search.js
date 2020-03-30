@@ -44,7 +44,7 @@ function setup(addressDbPath, streetDbPath) {
 
     // perform a db lookup for the specified street
     // @todo: perofmance: only query for part of the table
-    query.search(db, point, normalized.number, normalized.street, function (err, res) {
+    query.extract(db, point, normalized.street, function (err, res) {
 
       // @note: results can be from multiple different street ids.
 
@@ -100,11 +100,45 @@ function setup(addressDbPath, streetDbPath) {
       var map_l = {};
       var res_r = []
       var res_l = []
+
+      var before_r
+      var before_l
+      var after_r
+      var after_l
+
       res.forEach(function (row) {
-        if (row.parity === "R")
-          res_r.push(row)
-        else
-          res_l.push(row)
+        if (row.parity === "R") {
+
+          if (!before_r) {
+            before_r = row
+          }
+          else if (before_r.housenumber < row.housenumber && row.housenumber < normalized.number) {
+            before_r = row
+          }
+
+          if (!after_r) {
+            after_r = row
+          }
+          else if (after_r.housenumber > row.housenumber && row.housenumber > normalized.number) {
+            after_r = row
+          }
+
+        }
+        else {
+          if (!before_l) {
+            before_l = row
+          }
+          else if (before_l.housenumber < row.housenumber && row.housenumber < normalized.number) {
+            before_l = row
+          }
+
+          if (!after_l) {
+            after_l = row
+          }
+          else if (after_l.housenumber > row.housenumber && row.housenumber > normalized.number) {
+            after_l = row
+          }
+        }
       })
 
       console.log(res)
@@ -174,6 +208,8 @@ function setup(addressDbPath, streetDbPath) {
           type: 'interpolated',
           source: 'mixed',
           number: number,
+          before: before_r.housenumber,
+          after: after_r.housenumber,
           parity: "R",
           accuracy: 90,
           // number: '' + Math.floor( normalized.number ),
@@ -208,6 +244,8 @@ function setup(addressDbPath, streetDbPath) {
           type: 'interpolated',
           source: 'mixed',
           number: number,
+          before: before_l.housenumber,
+          after: after_l.housenumber,
           parity: "L",
           accuracy: 90,
           // number: '' + Math.floor( normalized.number ),
