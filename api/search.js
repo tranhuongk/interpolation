@@ -140,7 +140,10 @@ function setup(addressDbPath, streetDbPath) {
           }
         }
       })
-
+      res_r.push(before_r)
+      res_r.push(after_r)
+      res_l.push(before_l)
+      res_l.push(after_l)
       console.log(res)
 
       res_r.forEach(function (row) {
