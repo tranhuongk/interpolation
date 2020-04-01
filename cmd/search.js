@@ -28,9 +28,12 @@ conn.query(point, number, street, function (err, res) {
     return console.error('0 results found');
   }
 
-  for (var attr in res) {
-    console.log(attr + '\t' + res[attr]);
-  }
+  res.forEach(re => {
+    console.log(res.indexOf(re))
+    for (var attr in re) {
+      console.log(attr + '\t' + re[attr]);
+    }
+  });
 
 });
 
