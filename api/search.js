@@ -200,7 +200,7 @@ function setup(addressDbPath, streetDbPath) {
           source: 'mixed',
           number: number,
           parity: "R",
-          accuracy: parseFloat((rate*100).toFixed(2)),
+          accuracy: parseFloat((rate * 100).toFixed(2)),
           before: before.housenumber,
           after: after.housenumber,
           // number: '' + Math.floor( normalized.number ),
@@ -243,7 +243,7 @@ function setup(addressDbPath, streetDbPath) {
           source: 'mixed',
           number: number,
           parity: "L",
-          accuracy: parseFloat((rate*100).toFixed(2)),
+          accuracy: parseFloat((rate * 100).toFixed(2)),
           before: before.housenumber,
           after: after.housenumber,
           // number: '' + Math.floor( normalized.number ),
@@ -252,7 +252,9 @@ function setup(addressDbPath, streetDbPath) {
         })
       }
 
-
+      results.sort(function (a, b) {
+        return Math.abs(b.accuracy) - Math.abs(a.accuracy);
+      })
 
       // return interpolated address
       return cb(null, results);
