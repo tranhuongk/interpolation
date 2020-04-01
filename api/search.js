@@ -64,8 +64,8 @@ function setup(addressDbPath, streetDbPath) {
           source: match.source,
           source_id: match.source_id,
           number: number,
-          parity: match.parity,
           // number: analyze.housenumberFloatToString( match.housenumber ),
+          parity: match.parity,
           lat: parseFloat(match.lat.toFixed(7)),
           lon: parseFloat(match.lon.toFixed(7))
         }]);
@@ -84,8 +84,8 @@ function setup(addressDbPath, streetDbPath) {
           source: match.source,
           source_id: match.source_id,
           number: number,
-          parity: match.parity,
           // number: analyze.housenumberFloatToString( match.housenumber ),
+          parity: match.parity,
           lat: parseFloat(match.lat.toFixed(7)),
           lon: parseFloat(match.lon.toFixed(7))
         }]);
@@ -199,11 +199,9 @@ function setup(addressDbPath, streetDbPath) {
           type: 'interpolated',
           source: 'mixed',
           number: number,
+          // number: '' + Math.floor( normalized.number ),
           parity: "R",
           accuracy: parseFloat((rate * 100).toFixed(2)),
-          before: before.housenumber,
-          after: after.housenumber,
-          // number: '' + Math.floor( normalized.number ),
           lat: parseFloat(project.toDeg(point.lat).toFixed(7)),
           lon: parseFloat(project.toDeg(point.lon).toFixed(7))
         })
@@ -242,11 +240,9 @@ function setup(addressDbPath, streetDbPath) {
           type: 'interpolated',
           source: 'mixed',
           number: number,
+          // number: '' + Math.floor( normalized.number ),
           parity: "L",
           accuracy: parseFloat((rate * 100).toFixed(2)),
-          before: before.housenumber,
-          after: after.housenumber,
-          // number: '' + Math.floor( normalized.number ),
           lat: parseFloat(project.toDeg(point.lat).toFixed(7)),
           lon: parseFloat(project.toDeg(point.lon).toFixed(7))
         })
