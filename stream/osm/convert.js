@@ -34,6 +34,14 @@ function streamFactory(){
         lon: json.hasOwnProperty('centroid') ? json.centroid.lon : json.lon,
         lat: json.hasOwnProperty('centroid') ? json.centroid.lat : json.lat
       });
+      if(json.hasOwnProperty('bounds')){
+        address.setBounds({
+          e: json.bounds.e,
+          n: json.bounds.n,
+          s: json.bounds.s,
+          w: json.bounds.w
+        });
+      }
     }
     catch( e ){
       console.error( 'invalid json', e );
