@@ -8,8 +8,8 @@ function streamFactory(db, done){
   // sqlite3 prepared stmt
   var stmt = {
     address: db.prepare([
-      'INSERT INTO address (rowid, id, source, source_id, housenumber, lat, lon, parity, proj_lat, proj_lon)',
-      'VALUES (NULL, $id, $source, $source_id, $housenumber, $lat, $lon, $parity, $proj_lat, $proj_lon);'
+      'INSERT INTO address (rowid, id, source, source_id, housenumber, lat, lon, parity, proj_lat, proj_lon, proj_lat_left, proj_lon_left, proj_lat_right, proj_lon_right)',
+      'VALUES (NULL, $id, $source, $source_id, $housenumber, $lat, $lon, $parity, $proj_lat, $proj_lon, $proj_lat_left, $proj_lon_left, $proj_lat_right, $proj_lon_right);'
     ].join(' '))
   };
 
