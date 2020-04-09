@@ -3,6 +3,7 @@ var through = require('through2'),
   polyline = require('@mapbox/polyline'),
   project = require('../../lib/project'),
   analyze = require('../../lib/analyze'),
+  geodesic = require('../../lib/geodesic'),
   interpolate = require('../../lib/interpolate');
 
 // polyline precision
@@ -38,6 +39,75 @@ function streamFactory(db, done) {
       // add projection data to distances array
       distances.push({ housenumber: housenumber, dist: dist, parity: parity });
 
+      if (address.source_id.includes("way")) {
+
+        var left_is_min = true;
+
+        for (var i = 0; i < data.addresses.length; i++) {
+          address_check = data.addresses[i]
+          if (address_check.housenumber > address.housenumber && address_check.parity == address.parity) {
+
+            var A = { lat: project.toRad(address.proj_lat_left), lon: project.toRad(address.proj_lon_left) };
+            var B = { lat: project.toRad(address.proj_lat_right), lon: project.toRad(address.proj_lon_right) };
+
+
+            var C = { lat: project.toRad(address_check.proj_lat), lon: project.toRad(address_check.proj_lon) };
+            var distance1 = geodesic.distance(A, C);
+            var distance2 = geodesic.distance(B, C);
+
+            if (distance2 > distance1) {
+              left_is_min = false
+            }
+            break
+          }
+        }
+
+        var housenumber_l = left_is_min ? address.housenumber - 0.001 : address.housenumber + 0.001;
+        var housenumber_r = left_is_min ? address.housenumber + 0.001 : address.housenumber - 0.001;
+
+        this.push({
+          $id: data.street.id,
+          $source: 'POLYGON',
+          $source_id: undefined,
+          $housenumber: housenumber_l,
+          $lon: undefined,
+          $lat: undefined,
+          $parity: address.parity,
+          $proj_lon: address.proj_lon_left,
+          $proj_lat: address.proj_lat_left
+        });
+
+        this.push({
+          $id: data.street.id,
+          $source: 'POLYGON',
+          $source_id: undefined,
+          $housenumber: housenumber_r,
+          $lon: undefined,
+          $lat: undefined,
+          $parity: address.parity,
+          $proj_lon: address.proj_lon_right,
+          $proj_lat: address.proj_lat_right
+        });
+
+        // get variables from db row
+        var point_l = [parseFloat(address.proj_lon_left), parseFloat(address.proj_lat_left)];
+
+        // compute the distance along the linestring to the projected point
+        var proj_l = project.pointOnLine(coordinates, point_l);
+        var dist_l = project.lineDistance(project.sliceLineAtProjection(coordinates, proj_l));
+
+        // get variables from db row
+        var point_r = [parseFloat(address.proj_lon_right), parseFloat(address.proj_lat_right)];
+
+        // compute the distance along the linestring to the projected point
+        var proj_r = project.pointOnLine(coordinates, point_r);
+        var dist_r = project.lineDistance(project.sliceLineAtProjection(coordinates, proj_r));
+
+        // add projection data to distances array
+        distances.push({ housenumber: housenumber_l, dist: dist_l, parity: parity });
+        distances.push({ housenumber: housenumber_r, dist: dist_r, parity: parity });
+      }
+
     }, this);
 
     // ensure distances are sorted by distance ascending
@@ -52,11 +122,11 @@ function streamFactory(db, done) {
       compute the scheme (zig-zag vs. updown) of each road based on
       the house number parity.
       @see: https://en.wikipedia.org/wiki/House_numbering
-
+    
       zigzag: 1   3   5   7   9
               └─┬─┴─┬─┴─┬─┴─┬─┘
                 2   4   5   8
-
+    
       updown: 1   2   3   4   5
               └─┬─┴─┬─┴─┬─┴─┬─┘
                 9   8   7   6
