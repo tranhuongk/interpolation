@@ -53,7 +53,7 @@ function setup(addressDbPath, streetDbPath) {
 
       // try to find an exact match
       var match = res.find(function (row) {
-        if (row.source === 'VERTEX') { return false; }
+        if (row.source === 'VERTEX' || row.source === 'POLYGON') { return false; }
         return row.housenumber === normalized.number;
       });
 
@@ -73,7 +73,7 @@ function setup(addressDbPath, streetDbPath) {
 
       // try to find a close match with the same number (possibly an apartment)
       match = res.find(function (row) {
-        if (row.source === 'VERTEX') { return false; }
+        if (row.source === 'VERTEX' || row.source === 'POLYGON') { return false; }
         return Math.floor(row.housenumber) === Math.floor(normalized.number);
       });
 
