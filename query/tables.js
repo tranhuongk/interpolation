@@ -49,7 +49,7 @@ module.exports.address = function( db, rebuild, done ){
       '(',
         'rowid INTEGER PRIMARY KEY, id INTEGER, source TEXT, source_id TEXT, housenumber REAL,',
         'lat REAL, lon REAL, parity TEXT, proj_lat REAL, proj_lon REAL, proj_lat_left REAL, proj_lon_left REAL, proj_lat_right REAL, proj_lon_right REAL,',
-        'UNIQUE( id, housenumber ) ON CONFLICT IGNORE',
+        'UNIQUE( id, housenumber ) ON CONFLICT REPLACE',
       ');'
     ].join(' '));
 
