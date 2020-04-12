@@ -1,16 +1,16 @@
 
-module.exports.street = function( db, rebuild, done ){
-  db.serialize(function(){
+module.exports.street = function (db, rebuild, done) {
+  db.serialize(function () {
 
     // create rtree table
-    if( rebuild ){ db.run('DROP TABLE IF EXISTS rtree;'); }
+    if (rebuild) { db.run('DROP TABLE IF EXISTS rtree;'); }
     db.run([
       'CREATE VIRTUAL TABLE IF NOT EXISTS rtree',
       'USING rtree(id, minX, maxX, minY, maxY);'
     ].join(' '));
 
     // create names table
-    if( rebuild ){ db.run('DROP TABLE IF EXISTS names;'); }
+    if (rebuild) { db.run('DROP TABLE IF EXISTS names;'); }
     db.run([
       'CREATE TABLE IF NOT EXISTS names',
       '(rowid INTEGER PRIMARY KEY, id INTEGER, name TEXT);'
@@ -24,7 +24,7 @@ module.exports.street = function( db, rebuild, done ){
     // ].join(' '));
 
     // create polyline table
-    if( rebuild ){ db.run('DROP TABLE IF EXISTS polyline;'); }
+    if (rebuild) { db.run('DROP TABLE IF EXISTS polyline;'); }
     db.run([
       'CREATE TABLE IF NOT EXISTS polyline',
       '(id INTEGER PRIMARY KEY, line TEXT);'
@@ -39,18 +39,29 @@ module.exports.street = function( db, rebuild, done ){
   });
 };
 
-module.exports.address = function( db, rebuild, done ){
-  db.serialize(function(){
+module.exports.address = function (db, rebuild, done) {
+  db.serialize(function () {
 
     // create address table
-    if( rebuild ){ db.run('DROP TABLE IF EXISTS address;'); }
+    if (rebuild) { db.run('DROP TABLE IF EXISTS address;'); }
     db.run([
       'CREATE TABLE IF NOT EXISTS address',
       '(',
-        'rowid INTEGER PRIMARY KEY, id INTEGER, source TEXT, source_id TEXT, housenumber REAL,',
-        'lat REAL, lon REAL, parity TEXT, proj_lat REAL, proj_lon REAL, proj_lat_left REAL, proj_lon_left REAL, proj_lat_right REAL, proj_lon_right REAL,',
-        'UNIQUE( id, housenumber ) ON CONFLICT REPLACE',
+      'rowid INTEGER PRIMARY KEY, id INTEGER, source TEXT, source_id TEXT, housenumber REAL,',
+      'lat REAL, lon REAL, parity TEXT, proj_lat REAL, proj_lon REAL, proj_lat_left REAL, proj_lon_left REAL, proj_lat_right REAL, proj_lon_right REAL,',
+      'UNIQUE( id, housenumber ) ON CONFLICT IGNORE',
       ');'
+    ].join(' '));
+
+    db.run([
+      'CREATE TRIGGER IF NOT EXISTS address_insert_newer',
+      'BEFORE INSERT ON address',
+      'FOR EACH ROW',
+      'WHEN EXISTS (SELECT * FROM address WHERE housenumber = NEW.housenumber) AND NEW.proj_lat_left IS NOT NULL',
+      'BEGIN',
+      'DELETE FROM address',
+      'WHERE housenumber = NEW.housenumber;',
+      'END;',
     ].join(' '));
 
     db.wait(done);

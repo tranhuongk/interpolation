@@ -9,4 +9,4 @@
 - Import proj_lat/lon left and right of polygon
 - Compute housenumber of proj_lat/lon left and right of polygon
 - Import it into database and use for compute vertex, interpolation
-- REPLACE address if conflict
+- Replace address if it is polygon and ignore else
