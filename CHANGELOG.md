@@ -10,3 +10,7 @@
 - Compute housenumber of proj_lat/lon left and right of polygon
 - Import it into database and use for compute vertex, interpolation
 - Replace address if it is polygon and ignore else
+
+# Version Fix 1.0.2
+
+- Update interpolate 2 road with 2 different id
