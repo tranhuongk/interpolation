@@ -14,4 +14,4 @@
 # Version Fix 1.0.2
 
 - Update interpolate 1 road with 2 lanes 2 different id
-- Update compute vertex 1 road with 2 laneslanes 2 different id
+- Update compute vertex 1 road with 2 lanes 2 different id
