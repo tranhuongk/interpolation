@@ -64,18 +64,11 @@ app.get('/search/geojson', function (req, res) {
   var number = req.query.number;
   var street = req.query.street
 
-
   conn.search.query(point, number, street, function (err, points) {
     if (err) { return res.status(400).json(err); }
     if (!point) { return res.status(200).json({}); }
 
-    var geojson = {
-      'type': 'FeatureCollection',
-      'features': points.map(function (point) {
-        return pretty.geojson.point(point, point.lon, point.lat)
-      })
-    };
-    res.json(geojson);
+    res.json(pretty.geojson.point(points[0], point[0].lon, point[0].lat));
   });
 
 });
