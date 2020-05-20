@@ -68,7 +68,7 @@ app.get('/search/geojson', function (req, res) {
     if (err) { return res.status(400).json(err); }
     if (!point) { return res.status(200).json({}); }
 
-    res.json(pretty.geojson.point(points[0], point[0].lon, point[0].lat));
+    res.json(pretty.geojson.point(points[0], points[0].lon, points[0].lat));
   });
 
 });
