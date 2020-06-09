@@ -37,7 +37,7 @@ function streamFactory(db, done) {
 
       var pois = []
 
-      res.forEach(poi => {
+      data.addresses.forEach(poi => {
         if (poi.id == road_id) {
           pois.push(poi)
         }
